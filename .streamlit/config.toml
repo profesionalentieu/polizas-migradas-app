@@ -1,0 +1,6 @@
+# Colores de la aplicación (los mismos de los gráficos del proyecto)
+[theme]
+primaryColor = "#003A63"
+
+[server]
+maxUploadSize = 5

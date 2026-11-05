@@ -1,0 +1,6 @@
+poliza_combinada,etiqueta_producto_time,etiqueta_unidad_de_negocios,letra_titular_time,etiqueta_condicion_iva,frecuencia_de_pago,pertenece_grupo_estadistico,despacho_digital,indicador_de_clausula_de_no_anulacion_y_no_modificacion,tipo_renovacion_time,cantidad_de_cuotas,cantidad_de_meses,polizas_vinculadas,ramo,prima_mensual
+Automotores + APF + Vinculada,Producto A,Unidad L,C,Sin dato,Cuotas,Sí,No,No,Manual,10,12,3,Autos,-500
+No combinada,Producto A,Unidad D,Q,Consumidor Final,Cuotas,Sí,No,Sin dato,Manual,1,12,0,Autos,11700
+Sin dato,Producto D,Unidad I,X,Sin dato,Cuotas,No,Sin dato,No,Automática,6,12,0,Motos,24800
+No combinada,Producto C,Unidad I,Q,Responsable Inscripto,Cuotas,Sí,Sí,Sin dato,Manual,10,12,0,Motos,59200
+Moto Vinculada,Producto B,Unidad D,L,Consumidor Final,Cuotas,No,Sin dato,No,Manual,3,12,3,Motos,36400

@@ -1,0 +1,13 @@
+poliza_combinada,etiqueta_producto_time,etiqueta_unidad_de_negocios,letra_titular_time,etiqueta_condicion_iva,frecuencia_de_pago,pertenece_grupo_estadistico,despacho_digital,indicador_de_clausula_de_no_anulacion_y_no_modificacion,nro_productor,nro_organizador,oficial_de_negocio,cantidad_de_cuotas,cantidad_de_meses,polizas_vinculadas
+Automotores Vinculada,Producto A,Unidad A,C,Responsable Inscripto,Cuotas,No,No,No,Productor 2,Organizador 13,Oficial 28,12,12,3
+Automotores Vinculada,Producto A,Unidad M,C,Consumidor Final,Cuotas,No,Sin dato,Sí,Otro productor,Organizador 5,Oficial 23,10,12,2
+Automotores + APF,Producto C,Unidad J,I,Monotributista,Mensual,No,No,Sin dato,Productor 2,Organizador 3,Oficial 8,0,12,0
+Automotores + APF,Producto B,Unidad D,C,Sin dato,Cuotas,No,No,Sí,Productor 2,Organizador 3,Oficial 7,6,12,0
+Automotores + APF + Vinculada,Producto B,Unidad J,J,Sin dato,Cuotas,Sí,Sin dato,Sí,Otro productor,Organizador 8,Oficial 22,3,12,0
+Moto + AP,Producto D,Unidad L,C,Monotributista,Cuotas,No,Sin dato,Sin dato,Productor 2,Organizador 7,Oficial 25,6,12,0
+Automotores + APF,Producto B,Unidad B,I,Responsable Inscripto,Cuotas,Sí,No,No,Productor 3,Organizador 10,Oficial 7,3,12,2
+Sin dato,Producto C,Unidad G,C,Consumidor Final,Cuotas,No,No,Sí,Productor 2,Organizador 13,Oficial 17,1,12,2
+Automotores Vinculada,Producto C,Unidad N,L,Sin dato,Cuotas,No,Sin dato,Sí,Productor 3,Organizador 12,Oficial 12,12,12,0
+Automotores + APF + Vinculada,Producto A,Unidad C,Q,Responsable Inscripto,Cuotas,No,Sí,Sin dato,Productor 2,Organizador 11,Oficial 26,12,12,0
+Automotores + APF + Vinculada,Producto C,Unidad I,L,Consumidor Final,Cuotas,Sí,Sin dato,Sí,Otro productor,Otro organizador,Oficial 22,5,12,0
+Automotores + APF,Producto D,Unidad D,D,Consumidor Final,Cuotas,Sí,Sí,Sin dato,Productor 3,Organizador 1,Oficial 18,1,12,0

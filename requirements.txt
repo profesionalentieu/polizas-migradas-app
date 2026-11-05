@@ -1,0 +1,9 @@
+# Dependencias de la aplicación publicada (Python 3.13). Versiones exactas: el modelo se guardó con scikit-learn 1.8.0
+# y se tiene que cargar con la misma versión.
+streamlit==1.65.0
+altair==6.3.0
+pandas==2.3.3
+numpy==2.3.5
+scipy==1.16.3
+scikit-learn==1.8.0
+joblib==1.6.0

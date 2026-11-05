@@ -1,0 +1,10 @@
+indicador,valor
+Filas del dataset original,15804
+Columnas del dataset original,58
+"Filas apartadas (copias de integración, con motivo)",7
+"Columnas apartadas (vacías, constantes o sin uso, con motivo)",17
+Filas de la base limpia,15797
+Columnas de la base limpia (con banderas y etiquetas),73
+"Pólizas de entrenamiento (80 %, por cliente)",12650
+"Pólizas de prueba (20 %, por cliente)",3147
+Operaciones registradas en el registro de cambios,57

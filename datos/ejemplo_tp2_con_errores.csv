@@ -1,0 +1,6 @@
+poliza_combinada,etiqueta_producto_time,etiqueta_unidad_de_negocios,letra_titular_time,etiqueta_condicion_iva,frecuencia_de_pago,pertenece_grupo_estadistico,despacho_digital,indicador_de_clausula_de_no_anulacion_y_no_modificacion,nro_productor,nro_organizador,oficial_de_negocio,cantidad_de_cuotas,cantidad_de_meses,polizas_vinculadas
+Automotores Vinculada,Producto A,Unidad Z,C,Responsable Inscripto,Cuotas,No,No,No,Productor 2,Organizador 13,Oficial 28,12,12,3
+Automotores Vinculada,Producto A,Unidad M,C,Consumidor Final,Cuotas,No,Sin dato,Sí,Otro productor,Organizador 5,Oficial 23,10,0,2
+Automotores + APF,Producto C,Unidad J,I,Monotributista,Mensual,No,No,Sin dato,Productor 2,Organizador 3,Oficial 8,diez,12,0
+Automotores + APF,Producto B,Unidad D,C,Sin dato,Cuotas,No,No,Sí,Productor 2,Organizador 3,Oficial 7,6,12,40
+Automotores + APF + Vinculada,Producto B,Unidad J,J,Sin dato,Cuotas,Sí,Sin dato,Sí,Otro productor,Organizador 8,Oficial 22,3,12,0

@@ -1,0 +1,13 @@
+paso,operaciones,decisiones
+Preparación,1,R27
+1 · Nombres,1,R5 (D1)
+2 · Tipos,6,"R6 (D2), R7 (D3)"
+3 · Columnas apartadas,1,R8–R11 (D4–D7)
+4 · Filas apartadas,2,"Decisión 28 (P3), R12 (D8)"
+5 · Imputaciones,6,"R14 (D10, supuesto S1), R15 (D11, supuesto S2), R16 (D12), R17 (D13), R18 (D14), R23 (D19)"
+6 · Columnas nuevas,22,"R20 (D16), R13 (D9), R12 (D8), R22 (D18), R21 (D17, supuesto S8), R29 (decisión 29), R29 (decisión 29, supuesto no confirmado)"
+7 · Atípicos,1,R24 (D20)
+8 · Identificadores,9,R28
+11 · Exportación,1,§5.3 y §5.4 del prompt
+12 · Versión 2,5,"R32 (Q4, decisión 30), R31 (Q6, decisión 30), R30 (Q5, decisión 30), Decisión 30; §5.3 y §5.4 del prompt"
+13 · Versión 3,2,"R38 (decisión 35), Decisión 35; §5.3 y §5.4 del prompt"

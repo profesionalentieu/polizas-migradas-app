@@ -1,0 +1,13 @@
+poliza_combinada,etiqueta_producto_time,etiqueta_unidad_de_negocios,letra_titular_time,etiqueta_condicion_iva,frecuencia_de_pago,pertenece_grupo_estadistico,despacho_digital,indicador_de_clausula_de_no_anulacion_y_no_modificacion,tipo_renovacion_time,cantidad_de_cuotas,cantidad_de_meses,polizas_vinculadas,ramo,prima_mensual
+Automotores + APF + Vinculada,Producto A,Unidad L,C,Sin dato,Cuotas,Sí,No,No,Manual,10,12,3,Autos,90600
+No combinada,Producto A,Unidad D,Q,Consumidor Final,Cuotas,Sí,No,Sin dato,Manual,1,12,0,Motos,11700
+Sin dato,Producto D,Unidad I,I,Sin dato,Cuotas,No,Sin dato,No,Automática,6,12,0,Motos,24800
+No combinada,Producto C,Unidad I,Q,Responsable Inscripto,Cuotas,Sí,Sí,Sin dato,Manual,10,12,0,Motos,59200
+Moto Vinculada,Producto B,Unidad D,L,Consumidor Final,Cuotas,No,Sin dato,No,Manual,3,12,3,Motos,36400
+Moto + AP,Producto D,Unidad M,I,Responsable Inscripto,Cuotas,No,Sin dato,Sin dato,Automática,1,12,0,Motos,157500
+Moto Vinculada,Producto B,Unidad G,L,Monotributista,Cuotas,Sí,Sin dato,Sí,Manual,12,12,0,Motos,241500
+Sin dato,Producto B,Unidad J,I,Monotributista,Cuotas,Sí,Sin dato,No,Sin renovación,12,12,2,Motos,41700
+Automotores + APF,Producto A,Unidad A,L,Responsable Inscripto,Cuotas,No,Sí,Sin dato,Automática,12,12,0,Autos,18400
+Automotores Vinculada,Producto B,Unidad A,Q,Responsable Inscripto,Cuotas,No,No,Sin dato,Automática,12,12,2,Autos,59600
+No combinada,Producto D,Unidad D,L,Consumidor Final,Cuotas,Sí,Sin dato,Sí,Manual,5,12,0,Autos,41600
+No combinada,Producto B,Unidad F,D,Consumidor Final,Cuotas,Sí,No,Sin dato,Manual,1,12,2,Autos,27500
