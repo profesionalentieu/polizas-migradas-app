@@ -3,6 +3,9 @@
 Aplicación de Streamlit del trabajo final de **Aprendizaje Automático y Grandes Datos (IC)**, UNRaf (Universidad Nacional de Rafaela).
 Autores: Agustín Bértola, Matías Bonafede y Agustín Ferrero.
 
+- **Aplicación publicada:** https://polizas-migradas.streamlit.app/
+- **Repositorio:** https://github.com/profesionalentieu/polizas-migradas-app
+
 Una aseguradora migró su cartera de autos y motos del sistema TIME a Guidewire. Con los datos que cada póliza tenía en TIME, la
 aplicación responde dos preguntas:
 

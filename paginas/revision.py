@@ -83,12 +83,16 @@ with pestanas[0]:
         # La probabilidad, con la tasa general y el umbral como referencia
         marcas = pd.DataFrame({"x": [tasa] + ([umbral] if np.isfinite(umbral) else []), "valor": [porc(tasa)] + ([porc(umbral)] if np.isfinite(umbral) else []),
                                "qué": ["tasa general"] + ([f"umbral con {r} a 1"] if np.isfinite(umbral) else [])})
-        barra = alt.Chart(pd.DataFrame({"x": [p], "y": ["esta póliza"]})).mark_bar(color=ROJO if dec == "revisar" else AZUL, size=36).encode(
+        # Sin eje vertical: la barra y las líneas ocupan todo el alto (con un eje nominal, el alto interno quedaba en cero y no se
+        # veían las líneas). La tasa general se rotula a la izquierda de su línea y el umbral a la derecha, para que no se pisen
+        barra = alt.Chart(pd.DataFrame({"x": [p]})).mark_bar(color=ROJO if dec == "revisar" else AZUL).encode(
             x=alt.X("x:Q", title="probabilidad de llegar sin titular", axis=alt.Axis(labelExpr=PORCIENTO),
-                    scale=alt.Scale(domain=[0, max(0.35, p * 1.2)])), y=alt.Y("y:N", title=None))
+                    scale=alt.Scale(domain=[0, max(0.35, p * 1.2)])))
         lineas = alt.Chart(marcas).mark_rule(strokeDash=[5, 3], size=2, color="black").encode(x="x:Q", tooltip=["qué:N", "valor:N"])
-        textos = alt.Chart(marcas).mark_text(align="left", dx=4, dy=-30, fontSize=12).encode(x="x:Q", text="qué:N")
-        st.altair_chart((barra + lineas + textos).properties(height=120, title="Esta póliza contra la tasa general y el umbral"), width="stretch")
+        textos = [alt.Chart(marcas[marcas["qué"] == q]).mark_text(align=a, dx=d, baseline="bottom", fontSize=12).encode(x="x:Q", y=alt.value(-4), text="qué:N")
+                  for q, a, d in [("tasa general", "right", -4), (f"umbral con {r} a 1", "left", 4)]]
+        st.altair_chart(alt.layer(barra, lineas, *textos).properties(title=alt.TitleParams("Esta póliza contra la tasa general y el umbral", offset=22)),
+                        width="stretch", height=175)
 
         # Por qué: el aporte de cada variable, en «cuánto multiplica las chances» [CL32, celdas 18–19 y 47–51]
         Z = np.asarray(flujo[:-1].transform(pd.DataFrame([fila])[cols])).ravel()
@@ -100,12 +104,14 @@ with pestanas[0]:
         ef = pd.DataFrame({"variable": por_var.index, "veces": np.exp(por_var.to_numpy())}).sort_values("veces")
         ef["signo"] = np.where(ef["veces"] >= 1, "aumenta", "disminuye")
         ef["veces_txt"] = ef["veces"].map(lambda v: num(v, 2))
-        st.altair_chart(alt.Chart(ef).mark_bar().encode(
-            x=alt.X("veces:Q", scale=alt.Scale(type="log"), title="cuánto multiplica las chances de llegar sin titular (escala logarítmica)"),
+        tope = max(1.25, 1.15 * float(np.max(np.maximum(ef["veces"], 1 / ef["veces"]))))      # escala simétrica alrededor de 1
+        st.altair_chart(alt.Chart(ef).mark_bar().encode(       # en escala logarítmica, las barras arrancan en 1 («no cambia»): el 0 no existe
+            x=alt.X("veces:Q", scale=alt.Scale(type="log", domain=[1 / tope, tope]), title="cuánto multiplica las chances de llegar sin titular (escala logarítmica)"),
+            x2=alt.datum(1),
             y=alt.Y("variable:N", sort=ef["variable"].tolist(), title=None, axis=alt.Axis(labelLimit=320, labelOverlap=False)),
             color=alt.Color("signo:N", scale=alt.Scale(domain=["aumenta", "disminuye"], range=[ROJO, GRIS]), legend=None),
             tooltip=["variable:N", alt.Tooltip("veces_txt:N", title="multiplica las chances por")]
-        ).properties(height=30 * len(ef) + 40, title="Qué sube o baja el riesgo de esta póliza, frente a una póliza típica"), width="stretch")
+        ).properties(title="Qué sube o baja el riesgo de esta póliza, frente a una póliza típica"), width="stretch", height=30 * len(ef) + 110)
         st.caption("Un valor de 1,5 quiere decir que esa característica multiplica por 1,5 las chances de llegar sin titular. "
                    "La logística suma los aportes en log-chances, así que los efectos se multiplican.")
 

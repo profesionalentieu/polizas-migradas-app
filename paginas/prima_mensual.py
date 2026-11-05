@@ -113,7 +113,8 @@ with pestanas[0]:
             y=alt.Y("variable:N", sort=efecto["variable"].tolist(), title=None, axis=alt.Axis(labelLimit=320, labelOverlap=False)),
             color=alt.Color("signo:N", scale=alt.Scale(domain=["sube", "baja"], range=[AZUL, GRIS]), legend=None),
             tooltip=[alt.Tooltip("variable:N"), alt.Tooltip("efecto_txt:N", title="sobre la prima")])
-        st.altair_chart(barras.properties(height=34 * len(efecto) + 40, title="Qué sube o baja la prima de esta póliza"), width="stretch")
+        st.altair_chart(barras.properties(title="Qué sube o baja la prima de esta póliza"), width="stretch",
+                        height=34 * len(efecto) + 110)          # el alto va en st.altair_chart: en .properties, Streamlit lo achica
         st.caption(md(f"Comparado con una póliza típica del entrenamiento (prima de referencia: {pesos(tipica)} por mes). "
                       "Los efectos se multiplican: los porcentajes no se suman."))
 
@@ -127,7 +128,7 @@ with pestanas[0]:
             y=alt.Y("unidad:N", sort="-x", title=None, axis=alt.Axis(labelOverlap=False)),
             color=alt.Color("elegida:N", scale=alt.Scale(domain=[True, False], range=[AZUL, GRIS]), legend=None),
             tooltip=[alt.Tooltip("unidad:N"), alt.Tooltip("prima_txt:N", title="prima mensual")]
-        ).properties(height=26 * len(unidades) + 40, title="La misma póliza, en cada unidad de negocios (azul: la elegida)"), width="stretch")
+        ).properties(title="La misma póliza, en cada unidad de negocios (azul: la elegida)"), width="stretch", height=26 * len(unidades) + 110)
 
 # --- Un lote --------------------------------------------------------------------------------------------------------------
 with pestanas[1]:
