@@ -76,6 +76,11 @@ def figura(nombre, texto):
         st.image(str(AQUI / "figuras" / f"{nombre}.png"), width="stretch")
 
 
+def letra_grande(grafico, letra=15):
+    """Letra más grande en los ejes y el título: los gráficos se leen en una columna angosta y proyectados (la letra de Altair es de 11 px)."""
+    return grafico.configure_axis(labelFontSize=letra, titleFontSize=letra).configure_title(fontSize=letra + 2)
+
+
 def pie():
     st.divider()
     st.caption(FUENTE)

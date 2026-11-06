@@ -4,7 +4,7 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from comun import (AZUL, GRIS, PORCIENTO, ROJO, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, md, modelo, mostrar_registro, num, pesos,
+from comun import (AZUL, GRIS, PORCIENTO, ROJO, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos,
                    pie, porc, registrar, tabla, validar)
 
 paq = modelo("tp3_revision_publico.joblib")
@@ -81,10 +81,10 @@ with pestanas[0]:
                 x=alt.X("x:Q", title="probabilidad de llegar sin titular", axis=alt.Axis(labelExpr=PORCIENTO),
                         scale=alt.Scale(domain=[0, max(0.35, p * 1.2)])))
             lineas = alt.Chart(marcas).mark_rule(strokeDash=[5, 3], size=2, color="black").encode(x="x:Q", tooltip=["qué:N", "valor:N"])
-            textos = [alt.Chart(marcas[marcas["qué"] == q]).mark_text(align=a, dx=d, baseline="bottom", fontSize=12).encode(x="x:Q", y=alt.value(-4), text="qué:N")
+            textos = [alt.Chart(marcas[marcas["qué"] == q]).mark_text(align=a, dx=d, baseline="bottom", fontSize=14).encode(x="x:Q", y=alt.value(-4), text="qué:N")
                       for q, a, d in [("tasa general", "right", -4), (f"umbral con {r} a 1", "left", 4)]]
-            st.altair_chart(alt.layer(barra, lineas, *textos).properties(title=alt.TitleParams("Contra la tasa general y el umbral", offset=22)),
-                            width="stretch", height=185)
+            st.altair_chart(letra_grande(alt.layer(barra, lineas, *textos).properties(title=alt.TitleParams("Contra la tasa general y el umbral", offset=26))),
+                            width="stretch", height=230)                 # alto y letra grandes: es una columna angosta y se proyecta
             if st.button("Guardar en el registro", key="tp3_guardar"):
                 registrar("TP3 · revisión", [{**{NOMBRES[k]: v for k, v in entrada.items()}, "probabilidad": round(p, 4),
                                               f"decisión del modelo ({r} a 1)": dec, "regla del TP1": dec_regla}])
@@ -107,14 +107,14 @@ with pestanas[1]:
         ef["signo"] = np.where(ef["veces"] >= 1, "aumenta", "disminuye")
         ef["veces_txt"] = ef["veces"].map(lambda v: num(v, 2))
         tope = max(1.25, 1.15 * float(np.max(np.maximum(ef["veces"], 1 / ef["veces"]))))      # escala simétrica alrededor de 1
-        st.altair_chart(alt.Chart(ef).mark_bar().encode(       # en escala logarítmica, las barras arrancan en 1 («no cambia»): el 0 no existe
+        st.altair_chart(letra_grande(alt.Chart(ef).mark_bar().encode(       # en escala logarítmica, las barras arrancan en 1 («no cambia»): el 0 no existe
             x=alt.X("veces:Q", scale=alt.Scale(type="log", domain=[1 / tope, tope]), title="cuánto multiplica las chances de llegar sin titular (escala logarítmica)",
                     axis=alt.Axis(labelExpr="replace(format(datum.value, '~g'), '.', ',')")),        # coma decimal, como en el resto de la app
             x2=alt.datum(1),
             y=alt.Y("variable:N", sort=ef["variable"].tolist(), title=None, axis=alt.Axis(labelLimit=320, labelOverlap=False)),
             color=alt.Color("signo:N", scale=alt.Scale(domain=["aumenta", "disminuye"], range=[ROJO, GRIS]), legend=None),
             tooltip=["variable:N", alt.Tooltip("veces_txt:N", title="multiplica las chances por")]
-        ).properties(title="Qué sube o baja el riesgo de esta póliza, frente a una póliza típica"), width="stretch", height=30 * len(ef) + 110)
+        ).properties(title="Qué sube o baja el riesgo de esta póliza, frente a una póliza típica")), width="stretch", height=34 * len(ef) + 120)
         st.caption("Un valor de 1,5 quiere decir que esa característica multiplica por 1,5 las chances de llegar sin titular. "
                    "La logística suma los aportes en log-chances, así que los efectos se multiplican.")
 

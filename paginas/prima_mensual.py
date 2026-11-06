@@ -4,7 +4,7 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from comun import (AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, md, modelo, mostrar_registro, num, pesos,
+from comun import (AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos,
                    pie, porc, registrar, tabla, validar)
 
 paq = modelo("tp2_prima_publico.joblib")
@@ -77,11 +77,13 @@ with pestanas[0]:
             h = histo[histo["ramo"] == ramo].assign(desde_txt=lambda d: d["desde"].map(pesos), hasta_txt=lambda d: d["hasta"].map(pesos))
             texto_ramo = {"Autos": "los autos", "Motos": "las motos", "Todos": "todas las pólizas"}[ramo]
             base = alt.Chart(h).mark_rect(color=GRIS, stroke="white", strokeWidth=0.5).encode(
-                x=alt.X("desde:Q", scale=alt.Scale(type="log"), title="prima mensual ($, escala logarítmica)", axis=alt.Axis(labelExpr=MILES)),
-                x2="hasta:Q", y=alt.Y("polizas:Q", title="pólizas", axis=alt.Axis(labelExpr=MILES)), y2=alt.datum(0),
+                x=alt.X("desde:Q", scale=alt.Scale(type="log"), title="prima mensual ($, escala logarítmica)",
+                          axis=alt.Axis(labelExpr=MILES, values=[1e3, 1e4, 1e5, 1e6], grid=False)),       # pocas marcas: la letra es grande
+                x2="hasta:Q", y=alt.Y("polizas:Q", title="pólizas", axis=alt.Axis(labelExpr=MILES, tickCount=5)), y2=alt.datum(0),
                 tooltip=[alt.Tooltip("desde_txt:N", title="desde"), alt.Tooltip("hasta_txt:N", title="hasta"), alt.Tooltip("polizas:Q", title="pólizas")])
             regla = alt.Chart(pd.DataFrame({"x": [prima]})).mark_rule(color=AZUL, size=3).encode(x="x:Q")
-            st.altair_chart((base + regla).properties(title=f"Dónde cae entre las primas de {texto_ramo}"), width="stretch", height=230)
+            st.altair_chart(letra_grande((base + regla).properties(title=alt.TitleParams(["Dónde cae entre las primas", f"de {texto_ramo}"], offset=10))),
+                            width="stretch", height=400)                 # alto y letra grandes: es una columna angosta y se proyecta
             st.caption("Línea azul: esta póliza. Primas mensuales del entrenamiento; los intervalos con menos de 20 pólizas se unieron con el vecino.")
             st.caption("El porqué de esta cifra está en la pestaña «Por qué da eso».")
 
@@ -116,7 +118,7 @@ with pestanas[1]:
             y=alt.Y("variable:N", sort=efecto["variable"].tolist(), title=None, axis=alt.Axis(labelLimit=320, labelOverlap=False)),
             color=alt.Color("signo:N", scale=alt.Scale(domain=["sube", "baja"], range=[AZUL, GRIS]), legend=None),
             tooltip=[alt.Tooltip("variable:N"), alt.Tooltip("efecto_txt:N", title="sobre la prima")])
-        a.altair_chart(barras.properties(title="Qué sube o baja la prima de esta póliza"), width="stretch",
+        a.altair_chart(letra_grande(barras.properties(title="Qué sube o baja la prima de esta póliza")), width="stretch",
                        height=34 * len(efecto) + 110)            # el alto va en st.altair_chart: en .properties, Streamlit lo achica
         a.caption("Comparado con la póliza típica. Los efectos se multiplican: los porcentajes no se suman.")
 
@@ -125,12 +127,12 @@ with pestanas[1]:
         por_unidad = pd.DataFrame({"unidad": unidades, "prima": prediccion([{**fila, "etiqueta_unidad_de_negocios": u} for u in unidades])})
         por_unidad["elegida"] = por_unidad["unidad"] == fila["etiqueta_unidad_de_negocios"]
         por_unidad["prima_txt"] = por_unidad["prima"].map(pesos)
-        b.altair_chart(alt.Chart(por_unidad).mark_bar().encode(
+        b.altair_chart(letra_grande(alt.Chart(por_unidad).mark_bar().encode(
             x=alt.X("prima:Q", title="prima mensual estimada ($)", axis=alt.Axis(labelExpr=MILES)),
             y=alt.Y("unidad:N", sort="-x", title=None, axis=alt.Axis(labelOverlap=False)),
             color=alt.Color("elegida:N", scale=alt.Scale(domain=[True, False], range=[AZUL, GRIS]), legend=None),
             tooltip=[alt.Tooltip("unidad:N"), alt.Tooltip("prima_txt:N", title="prima mensual")]
-        ).properties(title="La misma póliza en cada unidad (azul: la elegida)"), width="stretch", height=26 * len(unidades) + 110)
+        ).properties(title="La misma póliza en cada unidad (azul: la elegida)")), width="stretch", height=28 * len(unidades) + 120)
 
 # --- Un lote --------------------------------------------------------------------------------------------------------------
 with pestanas[2]:
