@@ -1,4 +1,5 @@
-# Datos y limpieza: del archivo original a la base limpia, en conteos (sin filas ni nombres de columnas)
+# Datos y limpieza: del archivo original a la base limpia, en conteos (sin filas ni nombres de columnas). Los números a la vista;
+# las reglas, las imputaciones, los pasos, la partición y lo que corregimos, en pestañas
 import altair as alt
 import streamlit as st
 from comun import AZUL, pie, tabla
@@ -18,8 +19,10 @@ k[1].metric("Columnas en el original", miles(ind["Columnas del dataset original"
 k[2].metric("Pólizas en la base limpia", miles(ind["Filas de la base limpia"]))
 k[3].metric("Operaciones registradas", miles(ind["Operaciones registradas en el registro de cambios"]))
 
-st.subheader("Tres reglas que seguimos")
-st.markdown(f"""
+pestanas = st.tabs(["Tres reglas", "Datos completados por regla", "Los pasos", "La partición", "Lo que corregimos"])
+
+with pestanas[0]:
+    st.markdown(f"""
 1. **No borrar nada.** Las {miles(ind['Filas apartadas (copias de integración, con motivo)'])} filas que sobraban (copias de la misma
    póliza que dejó la integración) y las {miles(ind['Columnas apartadas (vacías, constantes o sin uso, con motivo)'])} columnas que no
    servían (vacías, constantes o sin uso) se movieron a hojas aparte, cada una con su motivo y su número de fila original.
@@ -29,26 +32,26 @@ st.markdown(f"""
    calcula después, dentro de cada modelo y solo con el entrenamiento, para no filtrar información.
 """)
 
-st.subheader("Datos completados por regla")
-st.altair_chart(alt.Chart(imp).mark_bar(color=AZUL).encode(
-    x=alt.X("celdas imputadas:Q", title="celdas completadas"), y=alt.Y("variable:N", sort="-x", title=None),
-    tooltip=["variable:N", "celdas imputadas:Q"]).properties(height=200), width="stretch")
-st.caption("Por ejemplo, en las pólizas mensuales la cantidad de cuotas está vacía y se completa con 0 (supuesto del equipo, no confirmado "
-           "por la empresa). La categoría «No combinada» también es imputada (supuesto), y por eso se declara en los dos modelos.")
+with pestanas[1]:
+    st.altair_chart(alt.Chart(imp).mark_bar(color=AZUL).encode(
+        x=alt.X("celdas imputadas:Q", title="celdas completadas"), y=alt.Y("variable:N", sort="-x", title=None),
+        tooltip=["variable:N", "celdas imputadas:Q"]), width="stretch", height=200)
+    st.caption("Por ejemplo, en las pólizas mensuales la cantidad de cuotas está vacía y se completa con 0 (supuesto del equipo, no confirmado "
+               "por la empresa). La categoría «No combinada» también es imputada (supuesto), y por eso se declara en los dos modelos.")
 
-st.subheader("Los pasos de la limpieza")
-st.dataframe(pasos[["paso", "operaciones"]], hide_index=True)
-st.caption("Cada operación quedó en la hoja «registro_de_cambios» de la base limpia, con la decisión del equipo que la aprobó.")
+with pestanas[2]:
+    st.dataframe(pasos[["paso", "operaciones"]], hide_index=True)
+    st.caption("Cada operación quedó en la hoja «registro_de_cambios» de la base limpia, con la decisión del equipo que la aprobó.")
 
-st.subheader("La partición, antes de mirar los datos")
-st.markdown(f"""
+with pestanas[3]:
+    st.markdown(f"""
 Antes de explorar, separamos el **80 % de los clientes** para entrenar ({miles(ind['Pólizas de entrenamiento (80 %, por cliente)'])}
 pólizas) y el **20 %** para la prueba final ({miles(ind['Pólizas de prueba (20 %, por cliente)'])} pólizas). La partición es **por
 cliente**: todas las pólizas de un mismo cliente quedan del mismo lado, para que ningún modelo «reconozca» a un cliente que ya vio.
 """)
 
-st.subheader("Lo que corregimos de la limpieza anterior")
-st.markdown("""
+with pestanas[4]:
+    st.markdown("""
 Antes de este trabajo, otra herramienta de IA había limpiado el mismo archivo. La usamos solo como consulta y verificamos con código
 cada cosa que hizo. Encontramos 8 errores verificados y otras decisiones sin registro; por ejemplo:
 - leyó como números identificadores que eran texto y **perdió los ceros iniciales**;

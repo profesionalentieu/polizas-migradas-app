@@ -41,16 +41,15 @@ if paneles:
 else:
     st.info("Esta unidad no tiene grupos de 20 pólizas o más.")
 
-st.markdown(f"""
-**Qué muestra.** En autos, las pólizas de **empresas** (personas jurídicas) llegan a Guidewire sin código de titular mucho más seguido
+with st.expander("Qué muestra", expanded=True):
+    st.markdown("""En autos, las pólizas de **empresas** (personas jurídicas) llegan a Guidewire sin código de titular mucho más seguido
 que las de **personas**. En motos no hay diferencia. La prueba de chi cuadrado se hizo **por cliente**, no por póliza, para que un
-cliente con muchas pólizas no pese de más: en autos la diferencia es significativa y en motos no.
-
-**Con cuidado.** El tipo de titular es un **supuesto del equipo**: sale de la letra del código de TIME (D = persona física, J = persona
+cliente con muchas pólizas no pese de más: en autos la diferencia es significativa y en motos no.""")
+with st.expander("Con cuidado: supuestos y límites"):
+    st.markdown("""El tipo de titular es un **supuesto del equipo**: sale de la letra del código de TIME (D = persona física, J = persona
 jurídica; L, C, I y Q, inferidas). Las tasas cuentan pólizas y son del entrenamiento (la prueba no se mira). Los grupos de menos de
-20 pólizas no se muestran.
-
-**Para qué sirvió.** Este hallazgo es la «regla del TP1» (revisar los autos de personas jurídicas), que en el TP3 se compara con el
-modelo.
-""")
+20 pólizas no se muestran.""")
+with st.expander("Para qué sirvió"):
+    st.markdown("""Este hallazgo es la «regla del TP1» (revisar los autos de personas jurídicas), que en el TP3 se compara con el
+modelo.""")
 pie()

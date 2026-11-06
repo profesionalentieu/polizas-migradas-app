@@ -60,8 +60,9 @@ else:
     apiladas = st.toggle("Mostrar las vistas una debajo de la otra (para pantallas angostas)", key="tab_apiladas")
     unir = alt.vconcat if apiladas else alt.hconcat
     st.altair_chart(unir(v1 + promedio, v2, v3).resolve_scale(y="shared"), width="content")
-    st.caption("Línea punteada en la vista 1: la tasa del grupo elegido. Vista 2: la marca blanca es la mediana; la barra, la mitad central "
-               "de las primas (del 25 % al 75 %); la línea fina, del 10 % al 90 %. Vista 3: decisiones del modelo público con 10 a 1, "
-               "medidas con validación cruzada (cada póliza la evaluó un modelo que no la vio). "
-               "No se muestran las unidades con menos de 20 pólizas en el grupo.")
+    with st.expander("Cómo leer las tres vistas"):
+        st.caption("Línea punteada en la vista 1: la tasa del grupo elegido. Vista 2: la marca blanca es la mediana; la barra, la mitad central "
+                   "de las primas (del 25 % al 75 %); la línea fina, del 10 % al 90 %. Vista 3: decisiones del modelo público con 10 a 1, "
+                   "medidas con validación cruzada (cada póliza la evaluó un modelo que no la vio). "
+                   "No se muestran las unidades con menos de 20 pólizas en el grupo.")
 pie()

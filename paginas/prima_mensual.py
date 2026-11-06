@@ -1,25 +1,21 @@
-# TP2 · ¿Cuánto paga por mes esta póliza? Estimación de una póliza o de un lote, explicación y resultados del trabajo
+# TP2 · ¿Cuánto paga por mes esta póliza? Una póliza (datos y estimación a la vista), por qué da eso, lote, registro y cómo funciona
+# el modelo, cada cosa en su pestaña: lo principal se ve sin bajar y lo secundario queda a un clic
 import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from comun import (AQUI, AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, leer_csv, legible, md, modelo, mostrar_registro, num, pesos, pie, porc,
-                   registrar, tabla, validar)
+from comun import (AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, md, modelo, mostrar_registro, num, pesos,
+                   pie, porc, registrar, tabla, validar)
 
 paq = modelo("tp2_prima_publico.joblib")
 flujo, cols, F = paq["flujo"], paq["columnas"], paq["factor_duan"]
 val, interno = paq["validacion"], paq["validacion_interno"]
 
 st.title("TP2 · ¿Cuánto paga por mes esta póliza?")
-st.markdown(f"""
-Con los datos que la póliza tenía en TIME, incluida su cartera (con seudónimos), el modelo estima su **prima mensual** (lo que cuesta
-el seguro por mes, sin impuestos).
-Es una **regresión del logaritmo de la prima** con interacciones entre las categorías y freno Lasso, elegida entre 17 modelos con
-validación cruzada por cliente. Explica alrededor del **{porc(val['R²'], 0)}** de la variación: el resto depende de datos que la base
-no tiene, como el vehículo, la suma asegurada y la zona.
-""")
+st.caption(md(f"Con los datos que la póliza tenía en TIME, una regresión del logaritmo de la prima estima la **prima mensual** (sin impuestos). "
+              f"Explica alrededor del **{porc(val['R²'], 0)}** de la variación; el resto depende de datos que la base no tiene."))
 
-pestanas = st.tabs(["Estimar una póliza", "Estimar un lote (CSV)", "Resultados del TP2"])
+pestanas = st.tabs(["Una póliza", "Por qué da eso", "Cargar un lote", "Registro", "Cómo funciona el modelo"])
 
 
 def prediccion(filas):
@@ -33,63 +29,68 @@ def error_del_tramo(prima):
     return paq["tramos"]["mae"][t], paq["tramos"]["error_mediano"][t]
 
 
-# --- Una póliza ----------------------------------------------------------------------------------------------------------
+# --- Una póliza: los datos a la izquierda y la estimación a la derecha ------------------------------------------------------------
 with pestanas[0]:
-    st.subheader("Datos de la póliza")
-    entrada = {}
-    c = st.columns(3)
-    categoricas = [col for col in paq["opciones"] if col not in paq["cartera"]]
-    for i, col in enumerate(categoricas):
-        entrada[col] = c[i % 3].selectbox(NOMBRES[col], [legible(col, v, paq) for v in paq["opciones"][col]], key=f"tp2_{col}")
-    for j, col in enumerate(NUMERICAS):
-        vistos = [int(v) for v in paq["numericas"][col]]
-        defecto = 12 if col == "cantidad_de_meses" else 0
-        entrada[col] = c[(i + 1 + j) % 3].selectbox(NOMBRES[col], vistos, index=vistos.index(defecto), key=f"tp2_{col}")
-    with st.expander("Cartera (productor, organizador y oficial): seudónimos por tamaño, sin códigos"):
-        st.caption("«Productor 1» es el de la cartera más grande, «Productor 2» el que le sigue, y así. Solo aparecen las carteras con "
-                   "100 pólizas o más en los datos; cualquier otra entra como «cartera chica o nueva».")
-        k = st.columns(3)
-        for col, caja in zip(paq["cartera"], k):
-            valores = paq["opciones"][col]
-            entrada[col] = caja.selectbox(NOMBRES[col], [legible(col, v, paq) for v in valores],
-                                          index=valores.index(paq["cartera_defecto"][col]), key=f"tp2_{col}")
+    izq, der = st.columns([3, 2], gap="large")
+    with izq:
+        st.subheader("Datos de la póliza")
+        entrada = {}
+        c = st.columns(2)
+        categoricas = [col for col in paq["opciones"] if col not in paq["cartera"]]
+        for i, col in enumerate(categoricas):
+            entrada[col] = c[i % 2].selectbox(NOMBRES[col], [legible(col, v, paq) for v in paq["opciones"][col]], key=f"tp2_{col}")
+        for j, col in enumerate(NUMERICAS):
+            vistos = [int(v) for v in paq["numericas"][col]]
+            defecto = 12 if col == "cantidad_de_meses" else 0
+            entrada[col] = c[(i + 1 + j) % 2].selectbox(NOMBRES[col], vistos, index=vistos.index(defecto), key=f"tp2_{col}")
+        with st.expander("Cartera (productor, organizador y oficial): seudónimos por tamaño, sin códigos"):
+            st.caption("«Productor 1» es el de la cartera más grande, «Productor 2» el que le sigue, y así. Solo aparecen las carteras con "
+                       "100 pólizas o más en los datos; cualquier otra entra como «cartera chica o nueva».")
+            k = st.columns(3)
+            for col, caja in zip(paq["cartera"], k):
+                valores = paq["opciones"][col]
+                entrada[col] = caja.selectbox(NOMBRES[col], [legible(col, v, paq) for v in valores],
+                                              index=valores.index(paq["cartera_defecto"][col]), key=f"tp2_{col}")
 
     fila, errores, avisos = validar(entrada, paq)
-    for e in errores:
-        st.error(md(e))
-    if fila is not None:                                         # con errores no se estima nada
-        for a in avisos:
-            st.warning(md("Atención: " + a + ". La estimación puede ser menos confiable."))
-
-        prima = float(prediccion([fila])[0])
-        mae_t, mediano_t = error_del_tramo(prima)
+    with der:
         st.subheader("Estimación")
-        m1, m2 = st.columns([1, 2])
-        m1.metric("Prima mensual estimada", pesos(prima))
-        m2.markdown(md(f"""
-    En las pólizas con estimaciones parecidas a esta, el modelo se equivoca **en promedio {pesos(mae_t)} por mes**, y la mitad de las veces
-    el error es menor que el **{num(mediano_t, 0)} %** de la prima (validación cruzada, con clientes que el modelo no vio).
-    El error cambia con el precio: es más grande, en proporción, en las primas bajas.
-    """))
-        if st.button("Guardar en el registro", key="tp2_guardar"):
-            registrar("TP2 · prima mensual", [{**{NOMBRES[k]: v for k, v in entrada.items()}, "prima mensual estimada ($)": round(prima)}])
-            st.success("Guardada. El registro está al final de la página.")
+        for e in errores:
+            st.error(md(e))
+        if fila is not None:                                     # con errores no se estima nada
+            for a in avisos:
+                st.warning(md("Atención: " + a + ". La estimación puede ser menos confiable."))
+            prima = float(prediccion([fila])[0])
+            mae_t, mediano_t = error_del_tramo(prima)
+            st.metric("Prima mensual estimada", pesos(prima))
+            st.markdown(md(f"En las pólizas con estimaciones parecidas, el modelo se equivoca **en promedio {pesos(mae_t)} por mes**, y la "
+                           f"mitad de las veces el error es menor que el **{num(mediano_t, 0)} %** de la prima (validación cruzada, con clientes "
+                           "que el modelo no vio)."))
 
-        # Contexto: dónde cae la estimación entre las primas del entrenamiento
-        histo = tabla("prima_histograma.csv")
-        ramo = paq["ramo_de_combinada"].get(fila["poliza_combinada"]) or "Todos"
-        h = histo[histo["ramo"] == ramo].assign(desde_txt=lambda d: d["desde"].map(pesos), hasta_txt=lambda d: d["hasta"].map(pesos))
-        texto_ramo = {"Autos": "los autos", "Motos": "las motos", "Todos": "todas las pólizas"}[ramo]
-        base = alt.Chart(h).mark_rect(color=GRIS, stroke="white", strokeWidth=0.5).encode(
-            x=alt.X("desde:Q", scale=alt.Scale(type="log"), title="prima mensual ($, escala logarítmica)", axis=alt.Axis(labelExpr=MILES)),
-            x2="hasta:Q", y=alt.Y("polizas:Q", title="pólizas", axis=alt.Axis(labelExpr=MILES)), y2=alt.datum(0),
-            tooltip=[alt.Tooltip("desde_txt:N", title="desde"), alt.Tooltip("hasta_txt:N", title="hasta"), alt.Tooltip("polizas:Q", title="pólizas")])
-        regla = alt.Chart(pd.DataFrame({"x": [prima]})).mark_rule(color=AZUL, size=3).encode(x="x:Q")
-        st.altair_chart((base + regla).properties(height=260, title=f"Dónde cae esta póliza (línea azul) entre las primas de {texto_ramo}"),
-                        width="stretch")
-        st.caption("Distribución de las primas mensuales del entrenamiento; los intervalos con menos de 20 pólizas se unieron con el vecino.")
+            if st.button("Guardar en el registro", key="tp2_guardar"):
+                registrar("TP2 · prima mensual", [{**{NOMBRES[k]: v for k, v in entrada.items()}, "prima mensual estimada ($)": round(prima)}])
+                st.success("Guardada: está en la pestaña «Registro».")
 
-        # Por qué da lo que da: el aporte de cada variable, como porcentaje sobre la prima de una póliza típica [CL29, celdas 26–28]
+            # Contexto: dónde cae la estimación entre las primas del entrenamiento
+            histo = tabla("prima_histograma.csv")
+            ramo = paq["ramo_de_combinada"].get(fila["poliza_combinada"]) or "Todos"
+            h = histo[histo["ramo"] == ramo].assign(desde_txt=lambda d: d["desde"].map(pesos), hasta_txt=lambda d: d["hasta"].map(pesos))
+            texto_ramo = {"Autos": "los autos", "Motos": "las motos", "Todos": "todas las pólizas"}[ramo]
+            base = alt.Chart(h).mark_rect(color=GRIS, stroke="white", strokeWidth=0.5).encode(
+                x=alt.X("desde:Q", scale=alt.Scale(type="log"), title="prima mensual ($, escala logarítmica)", axis=alt.Axis(labelExpr=MILES)),
+                x2="hasta:Q", y=alt.Y("polizas:Q", title="pólizas", axis=alt.Axis(labelExpr=MILES)), y2=alt.datum(0),
+                tooltip=[alt.Tooltip("desde_txt:N", title="desde"), alt.Tooltip("hasta_txt:N", title="hasta"), alt.Tooltip("polizas:Q", title="pólizas")])
+            regla = alt.Chart(pd.DataFrame({"x": [prima]})).mark_rule(color=AZUL, size=3).encode(x="x:Q")
+            st.altair_chart((base + regla).properties(title=f"Dónde cae entre las primas de {texto_ramo}"), width="stretch", height=230)
+            st.caption("Línea azul: esta póliza. Primas mensuales del entrenamiento; los intervalos con menos de 20 pólizas se unieron con el vecino.")
+            st.caption("El porqué de esta cifra está en la pestaña «Por qué da eso».")
+
+# --- Por qué da eso: el aporte de cada variable y la misma póliza en cada unidad -------------------------------------------------
+with pestanas[1]:
+    if fila is None:
+        st.info("Corregí los datos de la póliza en la pestaña «Una póliza» para ver por qué da lo que da.")
+    else:
+        # El aporte de cada variable, como porcentaje sobre la prima de una póliza típica [CL29, celdas 26–28]
         Z = np.asarray(flujo[:-1].transform(pd.DataFrame([fila])[cols])).ravel()
         nombres_z = flujo[0].get_feature_names_out()
         aportes = pd.Series(Z * flujo[-1].coef_, index=nombres_z)
@@ -108,30 +109,31 @@ with pestanas[0]:
         efecto["signo"] = np.where(efecto["efecto"] >= 0, "sube", "baja")
         efecto["efecto_txt"] = efecto["efecto"].map(lambda v: f"{v:+.0f} %")
         tipica = float(np.exp(flujo[-1].intercept_))
+        st.markdown(md(f"Estimación de esta póliza: **{pesos(prima)} por mes**. Una póliza típica del entrenamiento paga **{pesos(tipica)}**."))
+        a, b = st.columns(2, gap="large")
         barras = alt.Chart(efecto).mark_bar().encode(
-            x=alt.X("efecto:Q", title="cuánto sube (+) o baja (−) la prima, en %"),
+            x=alt.X("efecto:Q", title="cambio en la prima (%)"),
             y=alt.Y("variable:N", sort=efecto["variable"].tolist(), title=None, axis=alt.Axis(labelLimit=320, labelOverlap=False)),
             color=alt.Color("signo:N", scale=alt.Scale(domain=["sube", "baja"], range=[AZUL, GRIS]), legend=None),
             tooltip=[alt.Tooltip("variable:N"), alt.Tooltip("efecto_txt:N", title="sobre la prima")])
-        st.altair_chart(barras.properties(title="Qué sube o baja la prima de esta póliza"), width="stretch",
-                        height=34 * len(efecto) + 110)          # el alto va en st.altair_chart: en .properties, Streamlit lo achica
-        st.caption(md(f"Comparado con una póliza típica del entrenamiento (prima de referencia: {pesos(tipica)} por mes). "
-                      "Los efectos se multiplican: los porcentajes no se suman."))
+        a.altair_chart(barras.properties(title="Qué sube o baja la prima de esta póliza"), width="stretch",
+                       height=34 * len(efecto) + 110)            # el alto va en st.altair_chart: en .properties, Streamlit lo achica
+        a.caption("Comparado con la póliza típica. Los efectos se multiplican: los porcentajes no se suman.")
 
         # La misma póliza en cada unidad de negocios
         unidades = paq["opciones"]["etiqueta_unidad_de_negocios"]
         por_unidad = pd.DataFrame({"unidad": unidades, "prima": prediccion([{**fila, "etiqueta_unidad_de_negocios": u} for u in unidades])})
         por_unidad["elegida"] = por_unidad["unidad"] == fila["etiqueta_unidad_de_negocios"]
         por_unidad["prima_txt"] = por_unidad["prima"].map(pesos)
-        st.altair_chart(alt.Chart(por_unidad).mark_bar().encode(
+        b.altair_chart(alt.Chart(por_unidad).mark_bar().encode(
             x=alt.X("prima:Q", title="prima mensual estimada ($)", axis=alt.Axis(labelExpr=MILES)),
             y=alt.Y("unidad:N", sort="-x", title=None, axis=alt.Axis(labelOverlap=False)),
             color=alt.Color("elegida:N", scale=alt.Scale(domain=[True, False], range=[AZUL, GRIS]), legend=None),
             tooltip=[alt.Tooltip("unidad:N"), alt.Tooltip("prima_txt:N", title="prima mensual")]
-        ).properties(title="La misma póliza, en cada unidad de negocios (azul: la elegida)"), width="stretch", height=26 * len(unidades) + 110)
+        ).properties(title="La misma póliza en cada unidad (azul: la elegida)"), width="stretch", height=26 * len(unidades) + 110)
 
 # --- Un lote --------------------------------------------------------------------------------------------------------------
-with pestanas[1]:
+with pestanas[2]:
     st.markdown("Subí un CSV con una póliza por fila y las mismas columnas que la plantilla. Cada fila se valida por separado: "
                 "las que tienen errores se marcan con su motivo y no se estiman, y el resto sigue.")
     d1, d2 = st.columns(2)
@@ -169,9 +171,16 @@ with pestanas[1]:
                                                           "prima mensual estimada ($)": res.loc[i, "prima mensual estimada ($)"]} for i, _ in validas])
                 st.success(f"Se guardaron {len(validas)} pólizas en el registro.")
 
-# --- Resultados -------------------------------------------------------------------------------------------------------------
-with pestanas[2]:
+with pestanas[3]:
+    mostrar_registro()
+
+# --- Cómo funciona el modelo: cómo se eligió, la tabla de resultados y, a un clic, las figuras ---------------------------------
+with pestanas[4]:
     st.markdown(md(f"""
+**Qué es.** Una **regresión del logaritmo de la prima** con interacciones entre las categorías (polinómica de grado 2) y freno
+Lasso. Explica alrededor del **{porc(val['R²'], 0)}** de la variación; el resto depende de datos que la base no tiene, como el
+vehículo, la suma asegurada y la zona.
+
 **Cómo se eligió.** Probamos 17 modelos con la misma validación cruzada de 5 pliegues **por cliente** (las pólizas de un mismo
 cliente nunca quedan de los dos lados). Un modelo nuevo reemplaza al actual solo si gana en los 5 pliegues por más que el desvío
 entre pliegues, y si la diferencia se sostiene en 15 particiones más. Ninguno lo logró: quedó el más simple, **grado 2 + Lasso**.
@@ -187,14 +196,13 @@ No se midió en la prueba, para no volver a abrirla.
               "R² ajustado · validación": "R² ajust. valid.", "RMSE · prueba": "RMSE prueba (log)",
               "MAE ($) · validación": "MAE valid. ($)", "MAE ($) · prueba": "MAE prueba ($)", "MAPE ($, %) · prueba": "MAPE prueba ($, %)"}
     vista = res2[["modelo"] + [c for c in elegir if c in res2.columns]].rename(columns=elegir)
-    st.dataframe(vista.round(3), hide_index=True)
+    st.dataframe(en_castellano(vista), hide_index=True)
     st.caption("En pesos, con el factor de Duan, como en el informe. Validación: media de los 5 pliegues por cliente. "
                "Prueba: 3.147 pólizas de clientes que ningún modelo vio.")
-    for f, texto in [("tp2_barras_de_metricas", "Métricas por modelo en entrenamiento, validación y prueba."),
-                     ("tp2_predicho_contra_real", "Predicho contra real para cada modelo, en la prueba."),
-                     ("tp2_residuos_del_elegido", "Residuos del modelo elegido: colas pesadas y más dispersión en las primas bajas."),
-                     ("tp2_importancia_de_variables", "Importancia de las variables por permutación (con la cartera, en el modelo completo).")]:
-        st.image(str(AQUI / "figuras" / f"{f}.png"), caption=texto, width="stretch")
+    for f, texto in [("tp2_barras_de_metricas", "Métricas por modelo en entrenamiento, validación y prueba"),
+                     ("tp2_predicho_contra_real", "Predicho contra real para cada modelo, en la prueba"),
+                     ("tp2_residuos_del_elegido", "Residuos del modelo elegido: colas pesadas y más dispersión en las primas bajas"),
+                     ("tp2_importancia_de_variables", "Importancia de las variables por permutación (con la cartera, en el modelo completo)")]:
+        figura(f, texto)
 
-mostrar_registro()
 pie()

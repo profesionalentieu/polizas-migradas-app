@@ -60,6 +60,22 @@ def num(v, decimales=3):
     return f"{v:.{decimales}f}".replace(".", ",")
 
 
+def en_castellano(df, decimales=3):
+    """Tabla para mostrar: los números como texto con coma decimal y punto de miles (st.dataframe los muestra en inglés)."""
+    def f(v):
+        if isinstance(v, (int, float, np.integer, np.floating)) and not isinstance(v, bool) and np.isfinite(v):
+            d = 0 if abs(v) >= 1000 else decimales
+            return f"{v:,.{d}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        return "—" if isinstance(v, float) else v
+    return df.apply(lambda col: col.map(f) if col.dtype.kind in "fi" else col)
+
+
+def figura(nombre, texto):
+    """Una figura de los resultados dentro de un desplegable: queda a un clic y no alarga la página."""
+    with st.expander(texto):
+        st.image(str(AQUI / "figuras" / f"{nombre}.png"), width="stretch")
+
+
 def pie():
     st.divider()
     st.caption(FUENTE)
@@ -211,7 +227,7 @@ def mostrar_registro():
                "se guarda solo en esta sesión del navegador: **descargalo antes de cerrar la pestaña**, porque al recargar la página se pierde.")
     registro = st.session_state.get("registro", [])
     if not registro:
-        st.info("Todavía no guardaste ninguna predicción. Usá el botón «Guardar en el registro» después de estimar.")
+        st.info("Todavía no guardaste ninguna predicción. Usá el botón «Guardar en el registro» en las pestañas «Una póliza» o «Cargar un lote».")
         return
     df = pd.DataFrame(registro)
     st.dataframe(df, hide_index=True)
