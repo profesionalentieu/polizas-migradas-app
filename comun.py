@@ -19,6 +19,7 @@ warnings.filterwarnings("ignore", message="Found unknown categories")
 FUENTE = ("Fuente: lote 107 de pólizas migradas de TIME a Guidewire (corte: 29/10/2025), solo la parte de entrenamiento (12.650 pólizas). "
           "Datos agregados (ninguna celda con menos de 20 pólizas) y modelos en versión pública, sin códigos de cartera.")
 AZUL, GRIS, ROJO = "#003A63", "#9A9A9A", "#B03A2E"
+VERDE, NARANJA = "#2E7D32", "#B35400"        # decisión del TP3: verde para «No revisar» y naranja para «Revisar» (se leen con letra blanca)
 # Ejes de Altair con punto de miles y coma decimal (Vega formatea en inglés)
 MILES = "replace(format(datum.value, ',.0f'), /,/g, '.')"
 PORCIENTO = "replace(format(datum.value, '.0%'), '%', ' %')"
@@ -76,6 +77,20 @@ def figura(nombre, texto):
         st.image(str(AQUI / "figuras" / f"{nombre}.png"), width="stretch")
 
 
+def video(nombre, texto):
+    """La animación de cómo funciona el modelo: un MP4 sin audio, hecho con herramientas/videos_app.py y las cifras del modelo público."""
+    st.video(str(AQUI / "videos" / nombre))
+    st.caption(texto)
+
+
+def decision(texto, revisar):
+    """Una decisión en una caja de color: naranja si conviene revisar y verde si no. El texto admite **negrita** de Markdown."""
+    color, signo = (NARANJA, "⚠") if revisar else (VERDE, "✓")
+    html = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", texto)
+    st.markdown(f'<div style="background:{color}; color:#fff; padding:0.7rem 1rem; border-radius:0.5rem; font-size:1.1rem; '
+                f'margin-bottom:0.7rem">{signo} {html}</div>', unsafe_allow_html=True)
+
+
 def letra_grande(grafico, letra=15):
     """Letra más grande en los ejes y el título: los gráficos se leen en una columna angosta y proyectados (la letra de Altair es de 11 px)."""
     return grafico.configure_axis(labelFontSize=letra, titleFontSize=letra).configure_title(fontSize=letra + 2)
@@ -111,6 +126,38 @@ def legible(col, valor, paq):
     if valor == "__otro__":
         return f"{OTRA_CARTERA[col]} (cartera chica o nueva)"
     return LEGIBLE.get(str(valor), str(valor))
+
+
+def valores_iniciales(prefijo, paq, extras=None):
+    """Valor inicial de cada campo del formulario, tal como lo muestra el widget: el primer valor de cada categoría (el más común),
+    12 meses, 0 cuotas y 0 vinculadas, y la cartera chica o nueva."""
+    cartera = paq.get("cartera_defecto", {})
+    d = {f"{prefijo}_{col}": legible(col, cartera.get(col, v[0]), paq) for col, v in paq["opciones"].items()}
+    d |= {f"{prefijo}_{col}": 12 if col == "cantidad_de_meses" else 0 for col in NUMERICAS}
+    return d | (extras or {})
+
+
+def ejemplos_rapidos(prefijo, paq, iniciales, ejemplos):
+    """Pone los valores iniciales del formulario y un selector que carga pólizas típicas. Cada ejemplo es {columna: valor del modelo},
+    con solo lo que cambia respecto de los valores iniciales. La carga corre como callback, antes de que se dibujen los widgets:
+    es el momento en que Streamlit deja cambiar sus valores."""
+    for k, v in iniciales.items():
+        st.session_state.setdefault(k, v)
+    clave = f"{prefijo}_ejemplo"
+
+    def cargar():
+        nombre = st.session_state[clave]
+        if nombre:
+            st.session_state.update(iniciales)
+            st.session_state.update({f"{prefijo}_{col}": legible(col, v, paq) if col in paq["opciones"] else v
+                                     for col, v in ejemplos[nombre].items()})
+            st.session_state[f"{clave}_cargado"] = nombre
+            st.session_state[clave] = None                     # el selector vuelve a quedar vacío: se puede cargar el mismo ejemplo otra vez
+
+    st.selectbox("Ejemplos rápidos", list(ejemplos), index=None, placeholder="Elegí una póliza típica para cargar sus datos",
+                 key=clave, on_change=cargar)
+    if st.session_state.get(f"{clave}_cargado"):
+        st.caption(f"Último ejemplo cargado: «{st.session_state[f'{clave}_cargado']}». Se puede cambiar cualquier dato.")
 
 
 def _normalizar(texto):

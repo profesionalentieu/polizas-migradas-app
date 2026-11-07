@@ -4,13 +4,22 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from comun import (AZUL, GRIS, PORCIENTO, ROJO, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos,
-                   pie, porc, registrar, tabla, validar)
+from comun import (GRIS, NARANJA, PORCIENTO, ROJO, NOMBRES, NUMERICAS, VERDE, archivo, decision as caja_decision, ejemplos_rapidos, en_castellano, figura,
+                   leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos, pie, porc, registrar, tabla, validar, valores_iniciales, video)
 
 paq = modelo("tp3_revision_publico.joblib")
 flujo, cols, tasa = paq["flujo"], paq["columnas"], paq["tasa_general"]
 costos = {int(c["relación de costos"]): c for c in paq["costos"]}
 val = paq["validacion"]
+# Pólizas típicas para la demostración, con la prima que estima el TP2 (redondeada) como prima en TIME (docs/escenarios_demo.md)
+EJEMPLOS = {
+    "Auto de persona con paquete": {"prima_mensual": 82900.0},
+    "Auto de empresa sin paquete": {"poliza_combinada": "No combinada", "letra_titular_time": "J", "etiqueta_condicion_iva": "Responsable Inscripto",
+                                    "prima_mensual": 91400.0},
+    "Moto de empresa con paquete": {"ramo": "Motos", "poliza_combinada": "Moto + AP", "letra_titular_time": "J",
+                                    "etiqueta_condicion_iva": "Responsable Inscripto", "prima_mensual": 31500.0},
+    "Moto de persona con paquete (cerca del umbral)": {"ramo": "Motos", "poliza_combinada": "Moto + AP", "prima_mensual": 25700.0},
+}
 
 st.title("TP3 · ¿Conviene revisar esta póliza antes de migrarla?")
 st.caption(f"Una de cada quince pólizas del lote llegó a Guidewire sin el código de titular ({porc(tasa)}). Una **regresión logística** estima "
@@ -42,6 +51,9 @@ with pestanas[0]:
     izq, der = st.columns([3, 2], gap="large")
     with izq:
         st.subheader("Datos de la póliza")
+        rango = paq["prima_mensual"]
+        ejemplos_rapidos("tp3", paq, valores_iniciales("tp3", paq, {"tp3_ramo": "Autos", "tp3_prima_mensual": float(round(rango["mediana"], -2))}),
+                         EJEMPLOS)                              # los valores iniciales van en la sesión, no en cada widget
         entrada = {}
         c = st.columns(2)
         entrada["ramo"] = c[0].selectbox(NOMBRES["ramo"], ["Autos", "Motos"], key="tp3_ramo")
@@ -49,11 +61,9 @@ with pestanas[0]:
             entrada[col] = c[i % 2].selectbox(NOMBRES[col], [legible(col, v, paq) for v in paq["opciones"][col]], key=f"tp3_{col}")
         for j, col in enumerate(NUMERICAS):
             vistos = [int(v) for v in paq["numericas"][col]]
-            defecto = 12 if col == "cantidad_de_meses" else 0
-            entrada[col] = c[(i + 1 + j) % 2].selectbox(NOMBRES[col], vistos, index=vistos.index(defecto), key=f"tp3_{col}")
-        rango = paq["prima_mensual"]
-        entrada["prima_mensual"] = c[(i + 4) % 2].number_input(NOMBRES["prima_mensual"], min_value=0.0, value=float(round(rango["mediana"], -2)),
-                                                               step=500.0, format="%.0f", key="tp3_prima",
+            entrada[col] = c[(i + 1 + j) % 2].selectbox(NOMBRES[col], vistos, key=f"tp3_{col}")
+        entrada["prima_mensual"] = c[(i + 4) % 2].number_input(NOMBRES["prima_mensual"], min_value=0.0,
+                                                               step=500.0, format="%.0f", key="tp3_prima_mensual",
                                                                help=md(f"Entre {pesos(rango['min'])} y {pesos(rango['max'])} en los datos."))
 
     fila, errores, avisos = validar(entrada, paq, con_prima=True)
@@ -68,16 +78,16 @@ with pestanas[0]:
             dec, dec_regla = decision(p), ("revisar" if regla_tp1(fila) else "no revisar")
             st.metric("Probabilidad de llegar sin titular", porc(p))
             st.caption(f"{num(p / tasa, 1)} veces la tasa general ({porc(tasa)}).")    # sin delta: su flecha sube aunque la póliza esté por debajo
-            (st.error if dec == "revisar" else st.success)(
-                f"Modelo (logística, {r} a 1): **{dec.capitalize()}**" + (f" (umbral: {porc(umbral)})" if np.isfinite(umbral) else " (con este costo no conviene revisar ninguna)"))
-            (st.error if dec_regla == "revisar" else st.success)(f"Regla del TP1 (auto + persona jurídica): **{dec_regla.capitalize()}**")
+            caja_decision(f"Modelo (logística, {r} a 1): **{dec.capitalize()}**"
+                          + (f" (umbral: {porc(umbral)})" if np.isfinite(umbral) else " (con este costo no conviene revisar ninguna)"), dec == "revisar")
+            caja_decision(f"Regla del TP1 (auto + persona jurídica): **{dec_regla.capitalize()}**", dec_regla == "revisar")
 
             # La probabilidad, con la tasa general y el umbral como referencia
             marcas = pd.DataFrame({"x": [tasa] + ([umbral] if np.isfinite(umbral) else []), "valor": [porc(tasa)] + ([porc(umbral)] if np.isfinite(umbral) else []),
                                    "qué": ["tasa general"] + ([f"umbral con {r} a 1"] if np.isfinite(umbral) else [])})
             # Sin eje vertical: la barra y las líneas ocupan todo el alto (con un eje nominal, el alto interno quedaba en cero y no se
             # veían las líneas). La tasa general se rotula a la izquierda de su línea y el umbral a la derecha, para que no se pisen
-            barra = alt.Chart(pd.DataFrame({"x": [p]})).mark_bar(color=ROJO if dec == "revisar" else AZUL).encode(
+            barra = alt.Chart(pd.DataFrame({"x": [p]})).mark_bar(color=NARANJA if dec == "revisar" else VERDE).encode(
                 x=alt.X("x:Q", title="probabilidad de llegar sin titular", axis=alt.Axis(labelExpr=PORCIENTO),
                         scale=alt.Scale(domain=[0, max(0.35, p * 1.2)])))
             lineas = alt.Chart(marcas).mark_rule(strokeDash=[5, 3], size=2, color="black").encode(x="x:Q", tooltip=["qué:N", "valor:N"])
@@ -162,6 +172,11 @@ with pestanas[3]:
 
 # --- Cómo funciona el modelo: qué pasaría en la cartera, cómo se eligió, la prueba y, a un clic, las figuras -------------------------
 with pestanas[4]:
+    st.subheader("El modelo en 50 segundos")
+    v, _ = st.columns([3, 1])
+    with v:
+        video("tp3_como_funciona.mp4", "Animación sin audio, con las cifras del modelo público de esta aplicación (validación cruzada por cliente). "
+              "Debajo, la explicación por escrito y lo que pasaría en toda la cartera.")
     st.subheader(f"Qué pasaría en toda la cartera con {r} a 1")
     regla = paq["regla_tp1"]
     resumen = pd.DataFrame({

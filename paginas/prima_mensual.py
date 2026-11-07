@@ -4,12 +4,19 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from comun import (AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, en_castellano, figura, leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos,
-                   pie, porc, registrar, tabla, validar)
+from comun import (AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, ejemplos_rapidos, en_castellano, figura, leer_csv, legible, letra_grande, md, modelo,
+                   mostrar_registro, num, pesos, pie, porc, registrar, tabla, validar, valores_iniciales, video)
 
 paq = modelo("tp2_prima_publico.joblib")
 flujo, cols, F = paq["flujo"], paq["columnas"], paq["factor_duan"]
 val, interno = paq["validacion"], paq["validacion_interno"]
+# Pólizas típicas para la demostración (lo que cambia respecto de los valores iniciales; ver docs/escenarios_demo.md)
+EJEMPLOS = {
+    "Auto de persona con paquete": {},
+    "Auto de empresa con paquete": {"letra_titular_time": "J", "etiqueta_condicion_iva": "Responsable Inscripto"},
+    "Auto de empresa sin paquete": {"poliza_combinada": "No combinada", "letra_titular_time": "J", "etiqueta_condicion_iva": "Responsable Inscripto"},
+    "Moto de persona con paquete": {"poliza_combinada": "Moto + AP"},
+}
 
 st.title("TP2 · ¿Cuánto paga por mes esta póliza?")
 st.caption(md(f"Con los datos que la póliza tenía en TIME, una regresión del logaritmo de la prima estima la **prima mensual** (sin impuestos). "
@@ -34,6 +41,7 @@ with pestanas[0]:
     izq, der = st.columns([3, 2], gap="large")
     with izq:
         st.subheader("Datos de la póliza")
+        ejemplos_rapidos("tp2", paq, valores_iniciales("tp2", paq), EJEMPLOS)   # los valores iniciales van en la sesión, no en cada widget
         entrada = {}
         c = st.columns(2)
         categoricas = [col for col in paq["opciones"] if col not in paq["cartera"]]
@@ -41,16 +49,14 @@ with pestanas[0]:
             entrada[col] = c[i % 2].selectbox(NOMBRES[col], [legible(col, v, paq) for v in paq["opciones"][col]], key=f"tp2_{col}")
         for j, col in enumerate(NUMERICAS):
             vistos = [int(v) for v in paq["numericas"][col]]
-            defecto = 12 if col == "cantidad_de_meses" else 0
-            entrada[col] = c[(i + 1 + j) % 2].selectbox(NOMBRES[col], vistos, index=vistos.index(defecto), key=f"tp2_{col}")
+            entrada[col] = c[(i + 1 + j) % 2].selectbox(NOMBRES[col], vistos, key=f"tp2_{col}")
         with st.expander("Cartera (productor, organizador y oficial): seudónimos por tamaño, sin códigos"):
             st.caption("«Productor 1» es el de la cartera más grande, «Productor 2» el que le sigue, y así. Solo aparecen las carteras con "
                        "100 pólizas o más en los datos; cualquier otra entra como «cartera chica o nueva».")
             k = st.columns(3)
             for col, caja in zip(paq["cartera"], k):
                 valores = paq["opciones"][col]
-                entrada[col] = caja.selectbox(NOMBRES[col], [legible(col, v, paq) for v in valores],
-                                              index=valores.index(paq["cartera_defecto"][col]), key=f"tp2_{col}")
+                entrada[col] = caja.selectbox(NOMBRES[col], [legible(col, v, paq) for v in valores], key=f"tp2_{col}")
 
     fila, errores, avisos = validar(entrada, paq)
     with der:
@@ -62,6 +68,13 @@ with pestanas[0]:
                 st.warning(md("Atención: " + a + ". La estimación puede ser menos confiable."))
             prima = float(prediccion([fila])[0])
             mae_t, mediano_t = error_del_tramo(prima)
+            histo = tabla("prima_histograma.csv")
+            ramo = paq["ramo_de_combinada"].get(fila["poliza_combinada"]) or "Todos"
+            h = histo[histo["ramo"] == ramo].assign(desde_txt=lambda d: d["desde"].map(pesos), hasta_txt=lambda d: d["hasta"].map(pesos))
+            texto_ramo = {"Autos": "los autos", "Motos": "las motos", "Todos": "todas las pólizas"}[ramo]
+            if not h["desde"].min() <= prima <= h["hasta"].max():     # combinaciones raras: el modelo extrapola fuera de lo que vio
+                st.warning(md(f"Atención: la estimación queda fuera de las primas de {texto_ramo} en el entrenamiento (de {pesos(h['desde'].min())} "
+                              f"a {pesos(h['hasta'].max())}). Es una combinación con pocos datos: conviene leerla con mucho cuidado."))
             st.metric("Prima mensual estimada", pesos(prima))
             st.markdown(md(f"En las pólizas con estimaciones parecidas, el modelo se equivoca **en promedio {pesos(mae_t)} por mes**, y la "
                            f"mitad de las veces el error es menor que el **{num(mediano_t, 0)} %** de la prima (validación cruzada, con clientes "
@@ -72,11 +85,7 @@ with pestanas[0]:
                 st.success("Guardada: está en la pestaña «Registro».")
 
             # Contexto: dónde cae la estimación entre las primas del entrenamiento
-            histo = tabla("prima_histograma.csv")
-            ramo = paq["ramo_de_combinada"].get(fila["poliza_combinada"]) or "Todos"
-            h = histo[histo["ramo"] == ramo].assign(desde_txt=lambda d: d["desde"].map(pesos), hasta_txt=lambda d: d["hasta"].map(pesos))
-            texto_ramo = {"Autos": "los autos", "Motos": "las motos", "Todos": "todas las pólizas"}[ramo]
-            base = alt.Chart(h).mark_rect(color=GRIS, stroke="white", strokeWidth=0.5).encode(
+            base =alt.Chart(h).mark_rect(color=GRIS, stroke="white", strokeWidth=0.5).encode(
                 x=alt.X("desde:Q", scale=alt.Scale(type="log"), title="prima mensual ($, escala logarítmica)",
                           axis=alt.Axis(labelExpr=MILES, values=[1e3, 1e4, 1e5, 1e6], grid=False)),       # pocas marcas: la letra es grande
                 x2="hasta:Q", y=alt.Y("polizas:Q", title="pólizas", axis=alt.Axis(labelExpr=MILES, tickCount=5)), y2=alt.datum(0),
@@ -178,6 +187,11 @@ with pestanas[3]:
 
 # --- Cómo funciona el modelo: cómo se eligió, la tabla de resultados y, a un clic, las figuras ---------------------------------
 with pestanas[4]:
+    st.subheader("El modelo en 50 segundos")
+    v, _ = st.columns([3, 1])
+    with v:
+        video("tp2_como_funciona.mp4", "Animación sin audio, con las cifras del modelo público de esta aplicación (validación cruzada por cliente). "
+              "Debajo, la misma explicación por escrito.")
     st.markdown(md(f"""
 **Qué es.** Una **regresión del logaritmo de la prima** con interacciones entre las categorías (polinómica de grado 2) y freno
 Lasso. Explica alrededor del **{porc(val['R²'], 0)}** de la variación; el resto depende de datos que la base no tiene, como el
