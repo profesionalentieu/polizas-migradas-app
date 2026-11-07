@@ -1,7 +1,7 @@
 # Pólizas migradas de TIME a Guidewire: qué se puede anticipar
 
 Aplicación de Streamlit del trabajo final de **Aprendizaje Automático y Grandes Datos (IC)**, UNRaf (Universidad Nacional de Rafaela).
-Autores: Agustín Bértola, Matías Bonafede y Agustín Ferrero.
+Autores: Agustín Bértola, Matias Bonafede y Agustín Ferrero.
 
 - **Aplicación publicada:** https://polizas-migradas.streamlit.app/
 - **Repositorio:** https://github.com/profesionalentieu/polizas-migradas-app

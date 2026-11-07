@@ -9,7 +9,7 @@ c10 = next(c for c in p3["costos"] if c["relación de costos"] == 10)
 
 st.title("Pólizas migradas de TIME a Guidewire: qué se puede anticipar")
 st.caption("Aprendizaje Automático y Grandes Datos (IC) · UNRaf, Universidad Nacional de Rafaela · "
-           "Agustín Bértola, Matías Bonafede y Agustín Ferrero")
+           "Agustín Bértola, Matias Bonafede y Agustín Ferrero")
 
 st.markdown("""
 Una aseguradora pasó su cartera de autos y motos del sistema viejo (**TIME**) al nuevo (**Guidewire**, GW). Trabajamos con el
