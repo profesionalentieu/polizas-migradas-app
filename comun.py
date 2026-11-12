@@ -288,3 +288,135 @@ def mostrar_registro():
     if c2.button("Vaciar el registro"):
         st.session_state["registro"] = []
         st.rerun()
+
+
+# --- La pestaña «Todos los modelos» del TP2 y del TP3: todo lo que se comparó, más grande que en el artículo (R91) -----------------
+ELEGIDOS = {"TP2": "grado 2 + Lasso", "TP3": "regresión logística"}
+# Los que sobreajustan: la mayor brecha entre entrenamiento y validación de cada TP (los mismos que en rojo en el artículo)
+# (por TP: k vecinos sobreajusta en el TP2, pero no en el TP3)
+SOBREAJUSTAN = {"TP2": ["k vecinos", "grado 2 sin freno", "bosque aleatorio · por objetivo", "potenciación por gradiente · por objetivo",
+                        "grado 2 + Lasso · por objetivo en unidad y cartera"],
+                "TP3": ["SVM con núcleo gaussiano", "bosque aleatorio · por objetivo", "potenciación por gradiente · por objetivo",
+                        "votación suave · por objetivo", "logística · por objetivo en unidad y cartera (§61)"]}
+
+
+def coma(v, d=3):
+    return f"{v:.{d}f}".replace(".", ",")
+
+
+def grafico_entrenamiento_validacion_prueba(tp):
+    """Los tres puntos de cada modelo en una fila, ordenados por la brecha entre entrenamiento y validación (arriba, la mayor)."""
+    import json
+    import altair as alt
+    if tp == "TP2":
+        res, met, eje = tabla("resultados_tp2.csv"), "R²", "R² del log de la prima (más alto es mejor)"
+        res = res[~res["modelo"].str.startswith("línea de base")]
+    else:
+        res, met, eje = tabla("resultados_tp3_consolidada.csv"), "precisión promedio", "precisión promedio (más alto es mejor; azar: 0,068)"
+    conjuntos = ["entrenamiento", "validación", "prueba"]
+    res = res.assign(brecha=res[f"{met} · entrenamiento"] - res[f"{met} · validación"]).sort_values("brecha", ascending=False)
+    res["etiqueta"] = [m + ("  ★ elegido" if m == ELEGIDOS[tp] else "") for m in res["modelo"]]
+    largo = res.melt(id_vars=["modelo", "etiqueta", "brecha"], value_vars=[f"{met} · {c}" for c in conjuntos], var_name="conjunto", value_name="valor")
+    largo["conjunto"] = largo["conjunto"].str.split(" · ").str[1]
+    largo["valor_txt"] = largo["valor"].map(coma)
+    largo["brecha_txt"] = largo["brecha"].map(coma)
+    rangos = largo.groupby("etiqueta", as_index=False)["valor"].agg(minimo="min", maximo="max")
+    rojos = [e for e, m in zip(res["etiqueta"], res["modelo"]) if m in SOBREAJUSTAN[tp]]
+    color_etiqueta = (f"indexof({json.dumps(rojos)}, datum.value) >= 0 ? '{ROJO}' : "
+                      f"(indexof(datum.value, 'elegido') >= 0 ? '{AZUL}' : '#222222')")
+    y = alt.Y("etiqueta:N", sort=list(res["etiqueta"]), title=None,
+              axis=alt.Axis(labelLimit=460, labelFontSize=13, labelColor=alt.ExprRef(color_etiqueta)))
+    reglas = alt.Chart(rangos).mark_rule(color="#D0D0D0", strokeWidth=5).encode(y=y, x=alt.X("minimo:Q"), x2="maximo:Q")
+    puntos = alt.Chart(largo).mark_point(filled=True, size=130, opacity=1).encode(
+        y=y, x=alt.X("valor:Q", title=eje, scale=alt.Scale(zero=False),
+                     axis=alt.Axis(labelExpr="replace(format(datum.value, '.2f'), '.', ',')", titleFontSize=13, labelFontSize=12)),
+        color=alt.Color("conjunto:N", scale=alt.Scale(domain=conjuntos, range=[GRIS, AZUL, NARANJA]),
+                        legend=alt.Legend(orient="top", title=None, labelFontSize=13)),
+        shape=alt.Shape("conjunto:N", scale=alt.Scale(domain=conjuntos, range=["circle", "circle", "diamond"]), legend=None),
+        tooltip=[alt.Tooltip("modelo:N"), alt.Tooltip("conjunto:N"), alt.Tooltip("valor_txt:N", title=met),
+                 alt.Tooltip("brecha_txt:N", title="brecha entrenamiento − validación")])
+    st.altair_chart((reglas + puntos).properties(height=34 * len(res) + 40), width="stretch")
+    return res
+
+
+def todos_los_modelos(tp):
+    """Pestaña «Todos los modelos»: entrenamiento, validación y prueba; curvas de aprendizaje; predicho contra real (TP2) o matrices de
+    confusión (TP3); curvas de validación y los hiperparámetros de cada uno. Todo es validación cruzada por cliente, salvo lo que dice «prueba»."""
+    ap = tabla("todos_curvas_aprendizaje.csv")
+    ap = ap[ap["tp"] == tp]
+    fin = ap.sort_values("pólizas de entrenamiento").groupby("modelo").last()
+    fin["brecha"] = fin["entrenamiento"] - fin["validación"]
+    n_modelos, elegido = len(fin), ELEGIDOS[tp]
+    met = "R²" if tp == "TP2" else "precisión promedio"
+    st.markdown(f"Acá están **los {n_modelos} modelos que comparamos**, no solo el elegido ({elegido}). Todo sale de la misma validación "
+                "cruzada de 5 pliegues **por cliente** (las pólizas de un cliente nunca quedan de los dos lados); la prueba (3.147 pólizas de "
+                "clientes nuevos) aparece solo donde lo dice, y se abrió recién con el modelo ya elegido.")
+
+    st.subheader("1. Entrenamiento, validación y prueba de cada modelo")
+    res = grafico_entrenamiento_validacion_prueba(tp).set_index("modelo")
+    st.markdown(f"""
+**Cómo se lee.** Cada fila es un modelo, con tres puntos: **gris**, cómo le va con las pólizas con las que aprendió; **azul**, con
+clientes que no vio (validación); **naranja**, en la prueba. Si el gris queda lejos del azul, el modelo **memorizó** (sobreajuste):
+arriba están los de mayor brecha, con el nombre en rojo. Si los tres quedan juntos pero no muy altos, el modelo **no tiene de dónde
+aprender más** (subajuste). El elegido tiene una brecha de **{coma(res.loc[elegido, 'brecha'])}**; el de mayor brecha,
+**{res.index[0]}**, de **{coma(res['brecha'].iloc[0])}**. Pasá el cursor por un punto para ver su valor.
+""")
+
+    st.subheader("2. Curvas de aprendizaje de todos los modelos")
+    st.image(str(AQUI / "figuras" / f"{tp.lower()}_curvas_aprendizaje_todos.png"), width="stretch")
+    planos = int((fin["brecha"] < 0.03).sum())
+    st.markdown(f"""
+**Cómo se lee.** Cada panel es un modelo entrenado con cada vez más pólizas (eje horizontal): en gris, su {met} con las pólizas con
+las que aprendió; en azul, con clientes que no vio. **Sobreajusta** el modelo cuyas curvas quedan separadas (la brecha está escrita
+en cada panel): aprende detalles de esas pólizas que no se repiten en clientes nuevos. **Subajusta** el que tiene las dos
+curvas juntas y planas: con más pólizas no mejora, porque el límite son **las variables que faltan** (el vehículo, la suma asegurada,
+la zona, el historial), no la cantidad de datos.
+
+**Por qué quedó el elegido.** {elegido} tiene las curvas juntas (brecha de {coma(fin.loc[elegido, 'brecha'])}) y su validación es
+tan buena como la del mejor: ningún modelo más complejo le ganó en los 5 pliegues por más que el desvío. Entre modelos que empatan, se
+queda el más simple, que además se puede explicar variable por variable. {planos} de los {n_modelos} modelos tienen una brecha menor que 0,03.
+
+Los hiperparámetros de cada curva son los que más eligió la búsqueda en los 5 pliegues, y hay 6 tamaños por curva, del
+{"25" if tp == "TP2" else "10"} % al 100 % del entrenamiento de cada pliegue, como en el cuaderno.
+""")
+
+    if tp == "TP2":
+        st.subheader("3. Predicho contra real de todos los modelos, en la prueba")
+        st.image(str(AQUI / "figuras" / "tp2_predicho_contra_real.png"), width="stretch")
+        st.markdown("""
+**Cómo se lee.** Cada punto es una póliza de la prueba: su prima real (eje horizontal) contra la que estimó el modelo (eje vertical),
+en escala logarítmica. Sobre la diagonal, el modelo acierta. Todos dibujan la misma nube, porque les faltan los mismos datos: se
+quedan cortos en las primas muy altas y se pasan en las muy bajas. El árbol arma escalones (da pocas primas distintas) y k vecinos, la
+nube más ancha.
+""")
+    else:
+        st.subheader("3. Matrices de confusión de todos los modelos")
+        st.image(str(AQUI / "figuras" / "tp3_matrices_validacion_todos.png"), width="stretch")
+        st.markdown("""
+**Cómo se lee.** Cada matriz cruza lo que pasó (filas: con titular o sin titular) con lo que decidió el modelo (columnas: no revisar
+o revisar), con el umbral que minimiza el costo cuando dejar pasar una falla cuesta 10 veces más que revisar una póliza de más. Arriba
+de cada una: qué parte de las pólizas manda a revisar, qué parte de las fallas encuentra y el costo por póliza. Estas son de
+**validación**, para los 16 modelos; las de la **prueba**, de los 12 de la tabla del informe, están en el desplegable.
+
+**Un detalle honesto.** En validación, varios modelos tienen un costo algo menor que la logística (de 0,575 a 0,599 contra 0,608).
+Son cifras algo optimistas para todos, porque cada umbral se eligió sobre los mismos puntajes con los que se mide el costo. La elección
+no se hizo por esta cifra, sino antes, por la precisión promedio (donde ninguno se distinguió más que el desvío), por la calibración de
+las probabilidades y por la simplicidad. En la prueba, que no se usó para elegir, la logística resultó la de menor costo (0,623).
+""")
+        figura("tp3_prueba_matrices_todos", "Matrices de confusión en la prueba (los 12 modelos de la tabla del informe)")
+
+    st.subheader("4. Curvas de validación")
+    st.image(str(AQUI / "figuras" / f"{tp.lower()}_curvas_validacion_todos.png"), width="stretch")
+    st.markdown("""
+**Cómo se lee.** Acá cambia un solo ajuste del modelo (eje horizontal) y se mide con las pólizas con las que aprendió (gris) y con
+clientes que no vio (azul). Con un ajuste que lo hace muy simple, le va parecido en los dos; con uno que lo hace muy flexible, memoriza:
+el gris sigue subiendo y el azul baja. La línea naranja marca el mejor valor en validación, que es el que conviene.
+""")
+
+    with st.expander("Los hiperparámetros de cada modelo y el control contra el cuaderno"):
+        h = tabla("todos_hiperparametros.csv")
+        h = h[h["tp"] == tp].drop(columns="tp")
+        st.dataframe(en_castellano(h, 4), hide_index=True)
+        st.caption("Validación anidada: en cada pliegue, una búsqueda interna de 3 pliegues por cliente elige los hiperparámetros. «Fijados» son "
+                   "los que más eligió en los 5 pliegues, con los que se trazaron las curvas de aprendizaje. La validación reproducida da la "
+                   "del cuaderno.")

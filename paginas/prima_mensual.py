@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from comun import (AZUL, GRIS, MILES, NOMBRES, NUMERICAS, archivo, ejemplos_rapidos, en_castellano, figura, leer_csv, legible, letra_grande, md, modelo,
-                   mostrar_registro, num, pesos, pie, porc, registrar, tabla, validar, valores_iniciales, video)
+                   mostrar_registro, num, pesos, pie, porc, registrar, tabla, todos_los_modelos, validar, valores_iniciales, video)
 
 paq = modelo("tp2_prima_publico.joblib")
 flujo, cols, F = paq["flujo"], paq["columnas"], paq["factor_duan"]
@@ -22,7 +22,7 @@ st.title("TP2 · ¿Cuánto paga por mes esta póliza?")
 st.caption(md(f"Con los datos que la póliza tenía en TIME, una regresión del logaritmo de la prima estima la **prima mensual** (sin impuestos). "
               f"Explica alrededor del **{porc(val['R²'], 0)}** de la variación; el resto depende de datos que la base no tiene."))
 
-pestanas = st.tabs(["Una póliza", "Por qué da eso", "Cargar un lote", "Registro", "Cómo funciona el modelo"])
+pestanas = st.tabs(["Una póliza", "Por qué da eso", "Cargar un lote", "Registro", "Cómo funciona el modelo", "Todos los modelos"])
 
 
 def prediccion(filas):
@@ -220,5 +220,9 @@ No se midió en la prueba, para no volver a abrirla.
                      ("tp2_residuos_del_elegido", "Residuos del modelo elegido: colas pesadas y más dispersión en las primas bajas"),
                      ("tp2_importancia_de_variables", "Importancia de las variables por permutación (con la cartera, en el modelo completo)")]:
         figura(f, texto)
+
+# --- Todos los modelos: lo mismo que el elegido, para los que se compararon (R91) ---------------------------------------------------
+with pestanas[5]:
+    todos_los_modelos("TP2")
 
 pie()

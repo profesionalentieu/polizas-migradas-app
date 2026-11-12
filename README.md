@@ -15,7 +15,9 @@ aplicación responde dos preguntas:
   Guidewire sin código de titular, con un umbral elegido por costo y la regla del TP1 como comparación.
 
 Además tiene páginas sobre los datos y la limpieza, el hallazgo del TP1, un tablero con tres vistas vinculadas, los 8 segmentos de
-clientes del *clustering* del TP3 (con qué ofrecerle a cada grupo y si conviene revisarlo antes de migrar) y la metodología.
+clientes del *clustering* del TP3 (con qué ofrecerle a cada grupo y si conviene revisarlo antes de migrar) y la metodología. En el TP2 y
+el TP3, la pestaña **«Todos los modelos»** muestra los modelos que se compararon, no solo el elegido: entrenamiento, validación y prueba,
+curvas de aprendizaje, predicho contra real o matrices de confusión, y curvas de validación.
 
 ## Cómo ejecutarla en tu computadora
 
@@ -54,7 +56,7 @@ La aplicación se abre en el navegador, en `http://localhost:8501`.
 | `comun.py` | Carga de modelos y datos, formato de números, validación de entradas y registro de predicciones |
 | `paginas/` | Una página por sección (inicio, datos y limpieza, TP1, tablero, TP2, TP3, segmentos de clientes y metodología) |
 | `modelos/` | Los dos modelos y los centroides de los 8 segmentos, cada uno con todo su preprocesamiento, guardados con `joblib` (se usan sin reentrenar) |
-| `datos/` | Tablas agregadas, resultados de los trabajos y pólizas inventadas para probar la carga en lote |
+| `datos/` | Tablas agregadas, resultados de los trabajos (con las curvas y los hiperparámetros de todos los modelos) y pólizas inventadas para probar la carga en lote |
 | `figuras/` | Gráficos de los resultados de los TP |
 | `requirements.txt` | Dependencias con versiones exactas |
 

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from comun import (GRIS, NARANJA, PORCIENTO, ROJO, NOMBRES, NUMERICAS, VERDE, archivo, decision as caja_decision, ejemplos_rapidos, en_castellano, figura,
-                   leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos, pie, porc, registrar, tabla, validar, valores_iniciales, video)
+                   leer_csv, legible, letra_grande, md, modelo, mostrar_registro, num, pesos, pie, porc, registrar, tabla, todos_los_modelos, validar, valores_iniciales, video)
 
 paq = modelo("tp3_revision_publico.joblib")
 flujo, cols, tasa = paq["flujo"], paq["columnas"], paq["tasa_general"]
@@ -31,7 +31,7 @@ r = st.segmented_control("¿Cuántas veces más cuesta dejar pasar una falla que
 c_r = costos[r]
 umbral = c_r["umbral"]
 
-pestanas = st.tabs(["Una póliza", "Por qué da eso", "Cargar un lote", "Registro", "Cómo funciona el modelo"])
+pestanas = st.tabs(["Una póliza", "Por qué da eso", "Cargar un lote", "Registro", "Cómo funciona el modelo", "Todos los modelos"])
 
 
 def probabilidad(filas):
@@ -209,5 +209,9 @@ validación, contra **{num(paq['validacion_interno']['precision_promedio'])}** d
                      ("tp3_prueba_matrices_todos", "Matrices de confusión en la prueba de los doce modelos de la tabla"),
                      ("tp3_prueba_matriz_de_confusion", "Matriz de confusión en la prueba: el modelo final y el mejor ensamble")]:
         figura(f, texto)
+
+# --- Todos los modelos: lo mismo que el elegido, para los que se compararon (R91) ---------------------------------------------------
+with pestanas[5]:
+    todos_los_modelos("TP3")
 
 pie()

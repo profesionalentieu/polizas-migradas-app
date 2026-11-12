@@ -72,7 +72,7 @@ with pestanas[3]:
 - **TP1:** el gráfico principal del primer trabajo, por ramo, tipo de cliente y unidad.
 - **Tablero:** tres vistas vinculadas (fallas, primas y pólizas a revisar) con un mismo filtro. Hacé clic en una unidad para resaltarla.
 - **TP2 y TP3:** en la pestaña «Una póliza» cargás los datos y ves el resultado al lado; el porqué, el lote, el registro y cómo
-  funciona cada modelo están en las otras pestañas.
+  funciona cada modelo están en las otras pestañas, y en «Todos los modelos», los que se compararon, con sus curvas.
 - **Segmentos de clientes:** los 8 grupos de clientes, qué parece tener contratado cada uno, qué se le podría ofrecer y si
   conviene revisarlo antes de migrar; también podés ubicar una póliza en su grupo.
 - **Metodología:** cómo validamos, qué problemas aparecieron y cómo los resolvimos.

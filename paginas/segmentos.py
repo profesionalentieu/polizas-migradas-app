@@ -171,15 +171,29 @@ with pestanas[2]:
 # --- Cómo se armaron los grupos -------------------------------------------------------------------------------------------------
 with pestanas[3]:
     st.markdown(f"""
-**Qué hicimos.** Usamos *K-Means*, un método que junta las pólizas que se parecen en sus datos de TIME: cada grupo tiene un «centro»
-(la póliza promedio del grupo) y cada póliza va al centro más cercano. **No usamos si la póliza falló**: las fallas se contaron después,
-para ver si algún grupo se destaca.
+**Qué es el *clustering*.** Es agrupar sin respuesta conocida (aprendizaje no supervisado): en lugar de aprender a predecir algo,
+el método busca pólizas que se parecen entre sí y las junta. Usamos *K-Means*: cada grupo tiene un «centro» (la póliza promedio del
+grupo) y cada póliza va al centro más cercano, mirando sus datos de TIME (tipo de cliente, paquete, ramo, IVA, unidad, prima,
+cartera, cuotas…). **No usamos si la póliza falló**: las fallas se contaron después, para ver si algún grupo se destaca.
 
 **Por qué 8 grupos.** Probamos de 2 a 10 grupos y medimos cuatro criterios: el codo de la inercia, la silueta, el índice de
 Davies-Bouldin y el de Calinski-Harabasz. No coinciden (eligen 5, 10, 8 y 2). Antes de mirar los grupos fijamos una regla: el número
 con el mejor Davies-Bouldin (8), salvo que la mejor silueta (10) le gane por 0,01 o más; le ganaba por 0,007, así que quedaron **8**.
 Lo importante no depende de ese número: con 4 grupos o más ya aparece uno de pólizas sin paquete con muchas fallas, y con 7 o más
 queda limpio el de las empresas sin paquete, con una falla cada seis o siete pólizas.
+
+**Cómo se calculó cada cosa** (con las 12.650 pólizas de entrenamiento; la prueba no se usó):
+- **Perfil:** para cada grupo, el valor más común de cada dato (tipo de cliente, paquete, ramo, IVA, unidad) y qué porcentaje del grupo
+  lo tiene. La **prima típica** es la mediana de la prima mensual: la mitad del grupo paga menos y la otra mitad, más.
+- **Tasa de fallas:** las pólizas del grupo que llegaron a GW sin titular, divididas por las pólizas del grupo, y cuántas veces es eso
+  el promedio de la cartera ({porc(tasa)}).
+- **Sugerencias:** salen de comparar el perfil del grupo con el de los otros grupos. «Qué parece tener contratado» es su paquete más
+  común; «qué se le podría ofrecer», lo que tienen otros grupos de clientes parecidos y a ese le falta (un paquete, coberturas o
+  pólizas vinculadas). Son ideas que salen de los datos, para evaluar con el área comercial.
+  «¿Revisarlo antes de migrar?» sigue una regla fija sobre la tasa: **1,5 veces el promedio o más, revisar el grupo** (naranja);
+  **entre 1 y 1,5, que decida el modelo del TP3** póliza por póliza (azul); **menos de 1, no hace falta revisarlo entero** (verde).
+  En los grupos grandes que reúnen el 15 % de las fallas o más (el 3 y el 6), el texto avisa que igual conviene que decida el modelo.
+- **Una póliza nueva** va al grupo de centro más cercano, con los mismos datos y la misma preparación que usó *K-Means*.
 
 **Hasta dónde llegan.** Los grupos se superponen (silueta de 0,14, cuando 1 sería una separación perfecta) y, salvo el de las empresas,
 no separan las fallas: sirven para **describir la cartera y decidir qué ofrecerle a cada tipo de cliente**, no para predecir. Para
