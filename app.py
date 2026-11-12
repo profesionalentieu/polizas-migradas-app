@@ -15,6 +15,7 @@ paginas = {
         st.Page("paginas/tablero.py", title="Tablero"),
         st.Page("paginas/prima_mensual.py", title="TP2 · Prima mensual"),
         st.Page("paginas/revision.py", title="TP3 · Revisar antes de migrar"),
+        st.Page("paginas/segmentos.py", title="TP3 · Segmentos de clientes"),
     ],
     "Cómo lo hicimos": [
         st.Page("paginas/metodologia.py", title="Metodología"),

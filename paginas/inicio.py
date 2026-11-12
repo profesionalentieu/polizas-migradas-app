@@ -36,7 +36,8 @@ with pestanas[0]:
     c = st.columns(4)
     c[0].markdown("**TP1 · Datos y comunicación**  \nLimpieza sin borrar nada y el hallazgo principal: en autos, las empresas llegan sin titular 2,8 veces más.")
     c[1].markdown("**TP2 · Regresión**  \n17 modelos para estimar la prima mensual. Ninguno le gana con claridad al más simple: interacciones entre categorías con Lasso.")
-    c[2].markdown("**TP3 · Clasificación**  \n16 modelos y un umbral elegido por costo para decidir qué pólizas revisar. Queda la regresión logística.")
+    c[2].markdown("**TP3 · Clasificación**  \n16 modelos y un umbral elegido por costo para decidir qué pólizas revisar. Queda la regresión logística. "
+                  "Además, 8 grupos de clientes con *K-Means*.")
     c[3].markdown("**TP4 · Despliegue**  \nEsta aplicación, con los dos modelos, el tablero y la metodología.")
 
 with pestanas[1]:
@@ -62,7 +63,7 @@ with pestanas[1]:
 with pestanas[2]:
     st.markdown("La aplicación no tiene ninguna fila del dataset. Muestra conteos y tasas de grupos de 20 pólizas o más. "
                 "Los modelos son versiones públicas: las unidades de negocios y los productos aparecen como «Unidad A, B…» y «Producto A, B…», y "
-                "en el TP2 la cartera (productor, organizador y oficial) va con seudónimos por tamaño («Productor 1, 2…»), sin códigos. "
+                "en el TP2 y en los segmentos, la cartera (productor, organizador y oficial) va con seudónimos por tamaño («Productor 1, 2…»), sin códigos. "
                 "El TP3 no usa la cartera, que no le aportaba. Las cifras de la aplicación son de validación cruzada.")
 
 with pestanas[3]:
@@ -72,6 +73,8 @@ with pestanas[3]:
 - **Tablero:** tres vistas vinculadas (fallas, primas y pólizas a revisar) con un mismo filtro. Hacé clic en una unidad para resaltarla.
 - **TP2 y TP3:** en la pestaña «Una póliza» cargás los datos y ves el resultado al lado; el porqué, el lote, el registro y cómo
   funciona cada modelo están en las otras pestañas.
+- **Segmentos de clientes:** los 8 grupos de clientes, qué parece tener contratado cada uno, qué se le podría ofrecer y si
+  conviene revisarlo antes de migrar; también podés ubicar una póliza en su grupo.
 - **Metodología:** cómo validamos, qué problemas aparecieron y cómo los resolvimos.
 """)
 pie()
